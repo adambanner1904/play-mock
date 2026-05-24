@@ -1,0 +1,8 @@
+.class
+.tasty
+.log
+.bloop
+.metals
+target/
+project/project/
+metals.sbt
