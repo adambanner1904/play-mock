@@ -6,7 +6,7 @@ trait Reads[T]:
 object Reads:
 
   given Reads[Int] = _ match 
-    case JsNumber(n) => JsSuccess(n.toInt)
+    case JsNumber(n) if n.isValidInt => JsSuccess(n.toInt)
     case _  => JsError(Seq(JsPath.empty -> "Could not read to int"))
 
   given Reads[String] = _ match 

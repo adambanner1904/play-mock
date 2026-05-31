@@ -138,15 +138,15 @@ The following are Play *application* testing tools — they require a running Pl
 - `JsResult[A]` (either `JsSuccess[A]` or `JsError`) rather than `Either[Error, A]` was chosen to accumulate *multiple* validation errors rather than fail-fast — important for form validation where you want to report all field errors at once, not just the first.
 
 **Build**:
-- [ ] `JsValue` sealed ADT — `JsNull`, `JsBoolean`, `JsNumber`, `JsString`, `JsArray`, `JsObject`
-- [ ] `JsResult[A]` — `JsSuccess[A]` and `JsError` (with accumulated errors)
-- [ ] `Reads[A]` typeclass — `def reads(json: JsValue): JsResult[A]`
-- [ ] `Writes[A]` typeclass — `def writes(a: A): JsValue`
-- [ ] `Format[A]` — extends both `Reads[A]` and `Writes[A]`
-- [ ] Built-in instances: `Reads[String]`, `Reads[Int]`, `Reads[Boolean]`, `Reads[List[A]]`, `Reads[Option[A]]`
-- [ ] Built-in instances: matching `Writes` for the same types
-- [ ] `(json \ "fieldName")` path syntax — `JsPath` and the `\` operator
-- [ ] Macro-derived instances for case classes (or manual, if macro complexity is too much)
+- [x] `JsValue` sealed ADT — `JsNull`, `JsBoolean`, `JsNumber`, `JsString`, `JsArray`, `JsObject`
+- [x] `JsResult[A]` — `JsSuccess[A]` and `JsError` (with accumulated errors as `Seq[(JsPath, String)]`)
+- [x] `Reads[A]` typeclass — `def read(json: JsValue): JsResult[A]`
+- [x] `Writes[A]` typeclass — `def write(a: A): JsValue`
+- [x] `Format[A]` — extends both `Reads[A]` and `Writes[A]`, with auto-derivation via given
+- [x] Built-in instances: `Reads[String]`, `Reads[Int]`, `Reads[Boolean]`, `Reads[BigDecimal]`, `Reads[List[A]]`, `Reads[Option[A]]`
+- [x] Built-in instances: matching `Writes` for the same types (including `Writes[BigDecimal]`, `Writes[Option[A]]`)
+- [x] `(json \ "fieldName")` path syntax — `JsPath` and the `\` operator (both key and index traversal)
+- [ ] Macro-derived instances for case classes (or manual, if macro complexity is too much) — deferred to Additional Enhancements
 
 **Tests to write**:
 - `JsPath` — path construction, `\` operator traversal on `JsObject`, missing key returns appropriate result
@@ -169,19 +169,19 @@ The following are Play *application* testing tools — they require a running Pl
 **Why here**: Catching design issues early is cheaper than catching them after four more phases have built on top. This phase also establishes the testing patterns that all future phases will follow.
 
 **Build**:
-- [ ] `RichMatchers` trait — compose ScalaTest mixins
-- [ ] `UnitSpec` base trait — extends `AnyFreeSpecLike with RichMatchers`  
-- [ ] Add ScalaCheck dependency to `build.sbt` (`"org.scalatestplus" %% "scalacheck-1-17" % "3.2.18.0" % Test`)
-- [ ] `HeadersSpec` — see Phase 1 test list
-- [ ] `StatusSpec` — see Phase 1 test list  
-- [ ] `MethodSpec` — see Phase 1 test list
-- [ ] `HttpVersionSpec` — see Phase 1 test list
-- [ ] `JsPathSpec` — see Phase 1.5 test list
-- [ ] `JsResultSpec` — see Phase 1.5 test list
-- [ ] `ReadsSpec` — see Phase 1.5 test list
-- [ ] `WritesSpec` — see Phase 1.5 test list
+- [x] `RichMatchers` trait — composes Matchers, Diagrams, EitherValues, OptionValues, TryValues, AppendedClues, ScalaCheckPropertyChecks
+- [x] `UnitSpec` base trait — extends `AnyWordSpecLike with RichMatchers`
+- [x] Add ScalaCheck dependency to `build.sbt`
+- [x] `HeadersSpec` — normalisation, case-insensitive lookup, multi-value merging, `getFirst`, `exists`
+- [x] `StatusSpec` — ScalaCheck property-based range validation (100–599), named constants verified
+- [x] `MethodSpec` — table-driven: all 7 methods parse; invalid/wrong-case strings rejected
+- [x] `HttpVersionSpec` — table-driven: all 4 versions parse; invalid strings rejected
+- [x] `JsPathSpec` — `show` rendering, key/index traversal, missing keys, index out of bounds, empty path
+- [x] `JsResultSpec` — `map`, `flatMap`, `getOrElse` on both success and error
+- [~] `ReadsSpec` — partial: only `Reads[Int]` and `Reads[String]` tested; missing `Boolean`, `BigDecimal`, `List[A]`, `Option[A]`
+- [ ] `WritesSpec` — not yet written
 
-**Definition of done**: `sbt test` passes with no failures before moving to Phase 3.
+**Definition of done**: `sbt test` passes with no failures before moving to Phase 3. Remaining: complete `ReadsSpec` (Boolean, BigDecimal, List, Option) and write `WritesSpec`.
 
 ---
 
@@ -396,9 +396,9 @@ In real play-json, `Json.reads[MyCase]` and `Json.writes[MyCase]` use Scala macr
 
 | Phase | Status | Notes |
 |-------|--------|-------|
-| 1. HTTP Model | ✅ Complete | `RequestHeader` (trait), `Request[A]`, `Result`, `Headers`, `Method`, `HttpVersion`, `Status` (opaque type) |
-| 1.5. Mini play-json | 🔄 In progress | `JsValue`, `JsPath`, `JsResult` in progress |
-| 2. Testing Infrastructure | ⬜ Not started | |
+| 1. HTTP Model | ✅ Complete | `RequestHeader` (trait), `Request[A]`, `Result`, `Headers`, `Method` (enum), `HttpVersion` (enum), `Status` (opaque type). All use Scala 3 features. |
+| 1.5. Mini play-json | ✅ Complete | `JsValue` (sealed trait ADT), `JsPath` (key+index traversal), `JsResult` (covariant, with map/flatMap/getOrElse), `Reads[T]`, `Writes[T]`, `Format[A]` (auto-derived). Built-in instances for Int, String, Boolean, BigDecimal, List[A], Option[A]. Macro-derived case class instances deferred. |
+| 2. Testing Infrastructure | 🔄 Mostly complete | `RichMatchers`, `UnitSpec` (AnyWordSpecLike-based) done. All Phase 1 specs complete. Phase 1.5 specs mostly done — `ReadsSpec` partial (Int/String only, missing Boolean/BigDecimal/List/Option), `WritesSpec` not yet written. |
 | 3. Actions & EssentialAction | ⬜ Not started | |
 | 4. Body Parsers | ⬜ Not started | |
 | 5. Router | ⬜ Not started | |

@@ -3,6 +3,7 @@
 .log
 .bloop
 .metals
+.bsp
 target/
 project/project/
 metals.sbt

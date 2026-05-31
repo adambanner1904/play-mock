@@ -16,6 +16,7 @@ object Status:
   val Ok                  = makeStatus(200)
   val Created             = makeStatus(201)
   val NoContent           = makeStatus(204)
+  val Redirect            = makeStatus(303)
   val BadRequest          = makeStatus(400)
   val Unauthorized        = makeStatus(401)
   val Forbidden           = makeStatus(403)
