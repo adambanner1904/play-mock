@@ -1,9 +1,13 @@
 pipeline {
-    agent { docker { image 'maven:3.9.16-eclipse-temurin-21-alpine' } }
+    agent any
     stages {
-        stage('build') {
+        stage('Deploy') {
             steps {
-                sbt 'clean compile test'
+                timeout(time: 3, unit: 'MINUTES') {
+                    retry(5) {
+                        sh './flakey-deploy.sh'
+                    }
+                }
             }
         }
     }
